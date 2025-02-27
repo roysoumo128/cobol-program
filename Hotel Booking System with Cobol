@@ -1,0 +1,47 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. HOTELBOOKING.
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 CUSTOMER-NAME   PIC X(30).
+       01 ROOM-TYPE       PIC X(10).
+       01 NUM-NIGHTS      PIC 9(2).
+       01 ROOM-RATE-SINGLE PIC 9(5)V99 VALUE 100.00.  * Rate for single room
+       01 ROOM-RATE-DOUBLE PIC 9(5)V99 VALUE 150.00.  * Rate for double room
+       01 TOTAL-AMOUNT    PIC 9(5)V99.
+
+       PROCEDURE DIVISION.
+
+       DISPLAY "Welcome to the Hotel Booking System."
+       DISPLAY "----------------------------------------"
+       
+       * Accepting customer details
+       DISPLAY "Enter your name: "
+       ACCEPT CUSTOMER-NAME
+
+       DISPLAY "Enter room type (SINGLE or DOUBLE): "
+       ACCEPT ROOM-TYPE
+
+       DISPLAY "Enter number of nights: "
+       ACCEPT NUM-NIGHTS
+
+       * Calculate total amount based on room type
+       IF ROOM-TYPE = "SINGLE"
+           COMPUTE TOTAL-AMOUNT = ROOM-RATE-SINGLE * NUM-NIGHTS
+       ELSE IF ROOM-TYPE = "DOUBLE"
+           COMPUTE TOTAL-AMOUNT = ROOM-RATE-DOUBLE * NUM-NIGHTS
+       ELSE
+           DISPLAY "Invalid room type entered."
+           STOP RUN
+       END-IF
+
+       * Display booking summary
+       DISPLAY "----------------------------------------"
+       DISPLAY "Booking Summary: "
+       DISPLAY "Customer Name: " CUSTOMER-NAME
+       DISPLAY "Room Type: " ROOM-TYPE
+       DISPLAY "Number of Nights: " NUM-NIGHTS
+       DISPLAY "Total Bill: " TOTAL-AMOUNT
+       DISPLAY "----------------------------------------"
+       
+       STOP RUN.
