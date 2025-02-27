@@ -1,0 +1,39 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. GRADE-CALC.
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  STUDENT-NAME      PIC X(30) OCCURS 5 TIMES.
+       01  STUDENT-SCORE     PIC 9(3) OCCURS 5 TIMES.
+       01  STUDENT-GRADE     PIC X(1) OCCURS 5 TIMES.
+
+       PROCEDURE DIVISION.
+       
+       * Initialize student names and scores
+       MOVE "Shyam" TO STUDENT-NAME(1)   MOVE 85 TO STUDENT-SCORE(1).
+       MOVE "Diya" TO STUDENT-NAME(2)   MOVE 92 TO STUDENT-SCORE(2).
+       MOVE "Riya" TO STUDENT-NAME(3)  MOVE 76 TO STUDENT-SCORE(3).
+       MOVE "Deba" TO STUDENT-NAME(4)    MOVE 60 TO STUDENT-SCORE(4).
+       MOVE "Rishav" TO STUDENT-NAME(5) MOVE 50 TO STUDENT-SCORE(5).
+
+       * Calculate grades based on scores
+       PERFORM VARYING IDX FROM 1 TO 5
+           IF STUDENT-SCORE(IDX) >= 90
+               MOVE "A" TO STUDENT-GRADE(IDX)
+           ELSE IF STUDENT-SCORE(IDX) >= 80
+               MOVE "B" TO STUDENT-GRADE(IDX)
+           ELSE IF STUDENT-SCORE(IDX) >= 70
+               MOVE "C" TO STUDENT-GRADE(IDX)
+           ELSE IF STUDENT-SCORE(IDX) >= 60
+               MOVE "D" TO STUDENT-GRADE(IDX)
+           ELSE
+               MOVE "F" TO STUDENT-GRADE(IDX)
+           END-IF
+       END-PERFORM.
+
+       * Display results for all students
+       PERFORM VARYING IDX FROM 1 TO 5
+           DISPLAY STUDENT-NAME(IDX) " | Score: " STUDENT-SCORE(IDX) " | Grade: " STUDENT-GRADE(IDX)
+       END-PERFORM.
+
+       STOP RUN.
