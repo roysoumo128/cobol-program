@@ -1,0 +1,66 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. SIMPLELOAN.
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT INFILE  ASSIGN TO 'LOAN.INPUT'
+               ORGANIZATION IS SEQUENTIAL.
+           SELECT OUTFILE ASSIGN TO 'LOAN.REPORT'
+               ORGANIZATION IS SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD INFILE.
+       01 IN-REC.
+          05 IN-LOAN-ID   PIC X(5).
+          05 IN-SP1       PIC X.
+          05 IN-NAME      PIC X(15).
+          05 IN-SP2       PIC X.
+          05 IN-AMOUNT    PIC 9(7).
+          05 IN-FILLER    PIC X(47).
+
+       FD OUTFILE.
+       01 OUT-REC PIC X(80).
+
+       WORKING-STORAGE SECTION.
+       01 WS-EOF       PIC X VALUE 'N'.
+       01 WS-TOTAL     PIC 9(9) VALUE 0.
+       01 WS-COUNT     PIC 9(6) VALUE 0.
+       01 WS-AMT-DISPLAY PIC 9(9).
+
+       PROCEDURE DIVISION.
+       MAIN-LOGIC.
+           OPEN INPUT INFILE
+                OUTPUT OUTFILE
+           PERFORM UNTIL WS-EOF = 'Y'
+               READ INFILE
+                 AT END
+                   MOVE 'Y' TO WS-EOF
+                 NOT AT END
+                   ADD 1 TO WS-COUNT
+                   ADD IN-AMOUNT TO WS-TOTAL
+                   * Prepare output line: "LOANID NAME AMOUNT"
+                   MOVE SPACES TO OUT-REC
+                   STRING IN-LOAN-ID DELIMITED BY SIZE
+                          ' ' DELIMITED BY SIZE
+                          IN-NAME DELIMITED BY SIZE
+                          ' ' DELIMITED BY SIZE
+                          IN-AMOUNT DELIMITED BY SIZE
+                          INTO OUT-REC
+                   END-STRING
+                   WRITE OUT-REC
+               END-READ
+           END-PERFORM
+           * Write summary line
+           MOVE SPACES TO OUT-REC
+           STRING '*** SUMMARY - TOTAL LOANS: ' DELIMITED BY SIZE
+                  WS-COUNT DELIMITED BY SIZE
+                  '  TOTAL AMOUNT: ' DELIMITED BY SIZE
+                  WS-TOTAL DELIMITED BY SIZE
+                  INTO OUT-REC
+           END-STRING
+           WRITE OUT-REC
+           CLOSE INFILE OUTFILE
+           DISPLAY 'DONE. Records=' WS-COUNT ' Total=' WS-TOTAL
+           STOP RUN.
