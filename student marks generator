@@ -1,0 +1,141 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. STUDRES.
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT STUD-IN  ASSIGN TO 'STUD.INPUT'
+               ORGANIZATION IS SEQUENTIAL.
+           SELECT STUD-OUT ASSIGN TO 'STUD.REPORT'
+               ORGANIZATION IS SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD STUD-IN.
+       01 IN-REC.
+          05 IN-ID        PIC X(5).
+          05 IN-SP1       PIC X.
+          05 IN-NAME      PIC X(15).
+          05 IN-SP2       PIC X.
+          05 IN-MARK-E    PIC 9(3).
+          05 IN-SP3       PIC X.
+          05 IN-MARK-M    PIC 9(3).
+          05 IN-SP4       PIC X.
+          05 IN-MARK-S    PIC 9(3).
+          05 IN-FILLER    PIC X(43).
+
+       FD STUD-OUT.
+       01 OUT-REC PIC X(120).
+
+       WORKING-STORAGE SECTION.
+       77 WS-EOF            PIC X VALUE 'N'.
+
+       01 WS-COUNTERS.
+          05 WS-TOT-STUD     PIC 9(6) VALUE 0.
+          05 WS-PASS-COUNT   PIC 9(6) VALUE 0.
+          05 WS-FAIL-COUNT   PIC 9(6) VALUE 0.
+
+       01 WS-MARKS.
+          05 WS-M-E          PIC 9(3) VALUE 0.
+          05 WS-M-M          PIC 9(3) VALUE 0.
+          05 WS-M-S          PIC 9(3) VALUE 0.
+          05 WS-TOTAL        PIC 9(4) VALUE 0.
+          05 WS-AVG          PIC 9(3) VALUE 0.
+
+       01 WS-SUM-ALL.
+          05 WS-SUM-TOTAL    PIC 9(9) VALUE 0.  *> sum of totals for class avg calc
+
+       * Text helpers
+       01 TXT-VARS.
+          05 TXT-TOTAL       PIC X(4).
+          05 TXT-AVG         PIC X(3).
+          05 TXT-RESULT      PIC X(4).
+
+       PROCEDURE DIVISION.
+       MAIN-LOGIC.
+           OPEN INPUT STUD-IN
+                OUTPUT STUD-OUT
+
+           PERFORM UNTIL WS-EOF = 'Y'
+               READ STUD-IN
+                 AT END
+                    MOVE 'Y' TO WS-EOF
+                 NOT AT END
+                    PERFORM PROCESS-RECORD
+               END-READ
+           END-PERFORM
+
+           PERFORM WRITE-SUMMARY
+
+           CLOSE STUD-IN STUD-OUT
+           DISPLAY 'STUDRES DONE. Students=' WS-TOT-STUD
+                   ' Pass=' WS-PASS-COUNT ' Fail=' WS-FAIL-COUNT
+           STOP RUN.
+
+       PROCESS-RECORD.
+           * move input marks to working storage
+           MOVE IN-MARK-E TO WS-M-E
+           MOVE IN-MARK-M TO WS-M-M
+           MOVE IN-MARK-S TO WS-M-S
+
+           * compute total and integer average (avg = total / 3)
+           COMPUTE WS-TOTAL = WS-M-E + WS-M-M + WS-M-S
+           COMPUTE WS-AVG   = WS-TOTAL / 3
+
+           * update counters
+           ADD 1 TO WS-TOT-STUD
+           ADD WS-TOTAL TO WS-SUM-TOTAL
+
+           IF WS-AVG >= 40
+              MOVE 'PASS' TO TXT-RESULT
+              ADD 1 TO WS-PASS-COUNT
+           ELSE
+              MOVE 'FAIL' TO TXT-RESULT
+              ADD 1 TO WS-FAIL-COUNT
+           END-IF
+
+           * prepare text versions (COBOL will convert numerics to chars in STRING)
+           MOVE SPACES TO TXT-TOTAL TXT-AVG
+           STRING WS-TOTAL DELIMITED BY SIZE INTO TXT-TOTAL END-STRING
+           STRING WS-AVG   DELIMITED BY SIZE INTO TXT-AVG   END-STRING
+
+           * build output line: ID NAME TOTAL AVG RESULT
+           MOVE SPACES TO OUT-REC
+           STRING
+             IN-ID         DELIMITED BY SIZE
+             ' '           DELIMITED BY SIZE
+             IN-NAME       DELIMITED BY SIZE
+             ' TOTAL='     DELIMITED BY SIZE
+             TXT-TOTAL     DELIMITED BY SIZE
+             ' AVG='       DELIMITED BY SIZE
+             TXT-AVG       DELIMITED BY SIZE
+             ' RESULT='    DELIMITED BY SIZE
+             TXT-RESULT    DELIMITED BY SIZE
+             INTO OUT-REC
+           END-STRING
+           WRITE OUT-REC.
+
+       WRITE-SUMMARY.
+           MOVE SPACES TO OUT-REC
+           STRING '--------------------------------------------' DELIMITED BY SIZE
+              INTO OUT-REC
+           END-STRING
+           WRITE OUT-REC
+
+           * class average = WS-SUM-TOTAL / WS-TOT-STUD  (integer division)
+           IF WS-TOT-STUD > 0
+              COMPUTE WS-AVG = WS-SUM-TOTAL / WS-TOT-STUD
+           ELSE
+              MOVE 0 TO WS-AVG
+           END-IF
+
+           MOVE SPACES TO TXT-TOTAL TXT-AVG TXT-RESULT
+           STRING 'PASS=' DELIMITED BY SIZE
+                  WS-PASS-COUNT DELIMITED BY SIZE
+                  '  FAIL=' DELIMITED BY SIZE
+                  WS-FAIL-COUNT DELIMITED BY SIZE
+                  '  CLASS AVG=' DELIMITED BY SIZE
+                  WS-AVG DELIMITED BY SIZE
+                  INTO OUT-REC
+           END-STRING
+           WRITE OUT-REC.
